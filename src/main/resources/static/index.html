@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TestMate AI - QA Test Case Generator</title>
+    <link rel="stylesheet" href="css/dashboard-enhanced.css?v=20251226-fix">
+    <link rel="stylesheet" href="css/styles.css?v=20251229-btn-fix">
+
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <div class="header-left">
+                    <h1><span class="logo-text">TestMate</span> <span class="logo-ai">AI</span></h1>
+                    <p class="exclusive-tag">(Exclusively for SARB)</p>
+                    <p class="subtitle">AI-Powered QA Test Case Generator</p>
+                </div>
+                <div class="header-right">
+                    <div class="header-actions">
+                        <button class="header-btn" id="notificationBtn" title="Notifications">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                            </svg>
+                            <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
+                        </button>
+                        <button class="header-btn" id="darkModeToggle" title="Toggle Dark Mode">
+                            <svg class="sun-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="5"></circle>
+                                <line x1="12" y1="1" x2="12" y2="3"></line>
+                                <line x1="12" y1="21" x2="12" y2="23"></line>
+                                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                                <line x1="1" y1="12" x2="3" y2="12"></line>
+                                <line x1="21" y1="12" x2="23" y2="12"></line>
+                                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                            </svg>
+                            <svg class="moon-icon" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                            </svg>
+                        </button>
+                        <button class="header-btn" id="helpToggle" title="Help & Tutorials (Ctrl+H)">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                            </svg>
+                        </button>
+                    </div>
+                    <div id="dateTime" class="date-time-display">
+                        <div class="date"></div>
+                        <div class="time"></div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Agent Description Section -->
+        <div class="agent-description">
+            <div class="welcome-badge">
+                <span class="wave">👋</span>
+                <span class="welcome-text">Welcome! Let's make testing easier together!</span>
+            </div>
+            <div class="description-content">
+                <p>✨ Transform your JIRA stories into <strong>comprehensive, production-ready test cases</strong> in seconds. Our AI validates requirements, identifies edge cases, and generates positive/negative scenarios automatically — delivering <strong>Octane-compatible CSV exports</strong> ready for immediate use.</p>
+                <p class="fun-fact">💡 <em>Fun fact: Our AI thinks like a Senior QA Engineer, so you don't have to!</em></p>
+            </div>
+        </div>
+
+        <main>
+            <div class="input-section">
+                <h2>JIRA Story Details</h2>
+                
+                <!-- Input Method Tabs -->
+                <div class="input-tabs">
+                                        <!-- Analytics Dashboard tab restored -->
+                    <button class="tab-button active" data-tab="jira">🔗 JIRA Integration</button>
+                    <button class="tab-button" data-tab="manual">📝 Manual Entry</button>
+                    <button class="tab-button" data-tab="upload">📄 Upload Document</button>
+
+                </div>
+                
+                <!-- JIRA Integration Tab -->
+                <div id="jiraTab" class="tab-content active">
+                    <div class="jira-section">
+                        <div class="jira-info">
+                            <div class="info-icon">🔗</div>
+                            <div class="info-text">
+                                <h3>Direct JIRA Integration (Per-User Credentials)</h3>
+                                <p>Enter YOUR JIRA credentials below. Your credentials are used only for this session and are never stored on the server.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- JIRA Credentials Form -->
+                        <div class="jira-credentials-container">
+                            <h4>🔐 Your JIRA Credentials</h4>
+                            <form id="jiraCredentialsForm" class="jira-credentials-form">
+                                <div class="jira-credentials-grid">
+                                    <div class="form-group">
+                                        <label for="jiraUrl">JIRA URL <span class="required">*</span></label>
+                                        <input type="text" id="jiraUrl" class="jira-input" placeholder="https://yourcompany.atlassian.net" value="https://resbank.atlassian.net" required />
+                                        <small class="help-text">Your JIRA instance URL</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="jiraUsername">Email/Username <span class="required">*</span></label>
+                                        <input type="text" id="jiraUsername" class="jira-input" placeholder="your.email@company.com" required />
+                                        <small class="help-text">Your JIRA login email</small>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="jiraApiToken">API Token <span class="required">*</span></label>
+                                        <input type="password" id="jiraApiToken" class="jira-input" placeholder="JIRA API Token" required />
+                                        <small class="help-text">Create a JIRA API token from your Atlassian account</small>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" id="testJiraConnection" class="btn btn-primary">
+                                        <span class="btn-text">Test Connection</span>
+                                        <span class="spinner" style="display:none;"></span>
+                                    </button>
+                                    <div id="jiraConnectionStatus" style="display:none;"></div>
+                                </div>
+                            </form>
+                            
+                            <!-- Project Selection (visible after successful connection) -->
+                            <div id="jiraProjectSelection" style="display:none;">
+                                <h4>📋 Fetch JIRA Stories</h4>
+                                <div class="form-group">
+                                    <label for="jiraIssueKeys">JIRA Issue Keys <span class="required">*</span></label>
+                                    <input type="text" id="jiraIssueKeys" class="jira-input" placeholder="Enter issue keys separated by commas (e.g., R2CX-3380, R2CX-3381)" />
+                                    <small class="help-text">Enter one or more JIRA issue keys to fetch story details</small>
+                                </div>
+                                <div class="form-group">
+                                    <button type="button" id="fetchJiraStoryDetails" class="btn btn-success">
+                                        <span class="btn-text">Fetch Story Details</span>
+                                        <span class="spinner" style="display:none;"></span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Recent Stories History -->
+                            <div id="recentStoriesSection" style="margin-bottom: 20px;">
+                                <h4>📚 Recent Stories</h4>
+                                <div class="form-group">
+                                    <select id="recentStoriesDropdown" class="jira-input" style="width: 100%;">
+                                        <option value="">-- Select from recent stories --</option>
+                                    </select>
+                                    <small class="help-text">Quick access to your recently fetched stories</small>
+                                </div>
+                            </div>
+                            
+                            <!-- Stories List (visible after fetching stories) -->
+                            <div id="jiraStoriesList" style="display:none;">
+                                <!-- Search and Filter Controls -->
+                                <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                                    <h4 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 1rem;">🔍 Search & Filter</h4>
+                                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                                        <div>
+                                            <input type="text" id="storySearchInput" class="jira-input" placeholder="🔎 Search by key, summary, description..." style="width: 100%; padding: 8px;" />
+                                        </div>
+                                        <div>
+                                            <select id="statusFilter" class="jira-input" style="width: 100%; padding: 8px;">
+                                                <option value="">All Status</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select id="priorityFilter" class="jira-input" style="width: 100%; padding: 8px;">
+                                                <option value="">All Priority</option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <select id="sortBy" class="jira-input" style="width: 100%; padding: 8px;">
+                                                <option value="key">Sort by Key</option>
+                                                <option value="priority">Sort by Priority</option>
+                                                <option value="status">Sort by Status</option>
+                                                <option value="summary">Sort by Summary</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                        <span id="filteredCount" style="color: var(--text-secondary); font-size: 0.9rem;">Showing 0 stories</span>
+                                        <button type="button" id="clearFilters" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.85rem;">✖ Clear Filters</button>
+                                    </div>
+                                </div>
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                    <h4 style="margin: 0;">📝 Select Stories to Generate Test Cases</h4>
+                                    <div style="display: flex; gap: 10px; align-items: center;">
+                                        <span id="selectionCount" style="color: var(--text-secondary); font-size: 0.9rem;">0 selected</span>
+                                        <button type="button" id="selectAllStories" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.85rem;">✓ Select All</button>
+                                        <button type="button" id="deselectAllStories" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.85rem;">✗ Deselect All</button>
+                                    </div>
+                                </div>
+                                <div id="storiesContainer"></div>
+                                <div class="form-group">
+                                    <button type="button" id="generateFromJira" class="btn btn-primary">
+                                        <span class="btn-text">Generate Test Cases</span>
+                                        <span class="spinner" style="display:none;"></span>
+                                    </button>
+                                </div>
+                                <!-- Progress Indicator -->
+                                <div id="batchProgressIndicator" style="display: none; margin-top: 20px; padding: 20px; background: #f0f9ff; border: 2px solid #3b82f6; border-radius: 8px;">
+                                    <h4 style="margin: 0 0 15px 0; color: var(--primary-color);">⏳ Processing Stories...</h4>
+                                    <div style="margin-bottom: 10px;">
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                            <span id="progressText" style="font-weight: 600; color: var(--text-primary);">Processing story 1 of 5...</span>
+                                            <span id="progressPercentage" style="font-weight: 600; color: var(--primary-color);">20%</span>
+                                        </div>
+                                        <div style="width: 100%; height: 24px; background: #e5e7eb; border-radius: 12px; overflow: hidden;">
+                                            <div id="progressBar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #2563eb); transition: width 0.3s ease;"></div>
+                                        </div>
+                                    </div>
+                                    <div id="currentStoryInfo" style="padding: 12px; background: white; border-radius: 6px; border-left: 4px solid #3b82f6;">
+                                        <strong style="color: var(--primary-color);">Current:</strong> <span id="currentStoryName">Loading...</span>
+                                    </div>
+                                    <div id="processingResults" style="margin-top: 15px;">
+                                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px;">
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 1.5rem; font-weight: bold; color: #10b981;" id="successCount">0</div>
+                                                <div style="font-size: 0.85rem; color: var(--text-secondary);">Success</div>
+                                            </div>
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 1.5rem; font-weight: bold; color: #ef4444;" id="failureCount">0</div>
+                                                <div style="font-size: 0.85rem; color: var(--text-secondary);">Failed</div>
+                                            </div>
+                                            <div style="text-align: center; padding: 10px; background: white; border-radius: 6px;">
+                                                <div style="font-size: 1.5rem; font-weight: bold; color: var(--text-secondary);" id="remainingCount">0</div>
+                                                <div style="font-size: 0.85rem; color: var(--text-secondary);">Remaining</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Manual Entry Tab -->
+                <div id="manualTab" class="tab-content">
+                    <form id="jiraForm">
+                        <div class="form-group">
+                            <label for="userStory">User Story <span class="required">*</span></label>
+                            <textarea 
+                                id="userStory" 
+                                name="userStory" 
+                                rows="4" 
+                                required
+                                placeholder="As a [user type], I want to [action] so that [benefit]..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="acceptanceCriteria">Acceptance Criteria</label>
+                            <textarea 
+                                id="acceptanceCriteria" 
+                                name="acceptanceCriteria" 
+                                rows="6"
+                                placeholder="Given [context]&#10;When [action]&#10;Then [outcome]..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="businessRules">Business Rules</label>
+                            <textarea 
+                                id="businessRules" 
+                                name="businessRules" 
+                                rows="4"
+                                placeholder="Enter business rules and constraints..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="assumptions">Assumptions</label>
+                            <textarea 
+                                id="assumptions" 
+                                name="assumptions" 
+                                rows="3"
+                                placeholder="Enter any assumptions..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="constraints">Constraints</label>
+                            <textarea 
+                                id="constraints" 
+                                name="constraints" 
+                                rows="3"
+                                placeholder="Enter any constraints..."
+                            ></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="additionalNotes">Additional Notes</label>
+                            <textarea 
+                                id="additionalNotes" 
+                                name="additionalNotes" 
+                                rows="3"
+                                placeholder="Any additional information..."
+                            ></textarea>
+                        </div>
+
+                        <div class="button-group">
+                            <button type="submit" class="btn btn-primary" id="generateBtn">
+                                <span class="btn-text">Generate Test Cases</span>
+                                <span class="spinner" style="display: none;"></span>
+                            </button>
+                            <button type="button" class="btn btn-secondary" id="clearBtn">Clear Form</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Upload Document Tab -->
+                <div id="uploadTab" class="tab-content">
+                    <div class="upload-container">
+                        <div class="upload-box" id="uploadBox">
+                            <div class="upload-icon">📄</div>
+                            <h3>Upload Story Documents</h3>
+                            <p>Drag & drop your .doc or .docx files here (Max 10 files), or click to browse</p>
+                            <input 
+                                type="file" 
+                                id="fileInput" 
+                                accept=".doc,.docx" 
+                                multiple
+                                style="display: none;"
+                            />
+                            <button type="button" class="btn btn-primary" id="browseBtn">Browse Files</button>
+                        </div>
+                        
+                        <div class="file-info" id="fileInfo" style="display: none;">
+                            <div class="files-header">
+                                <h4>Selected Files (<span id="fileCount">0</span>)</h4>
+                                <button type="button" class="btn btn-secondary btn-sm" id="clearAllFilesBtn">Clear All</button>
+                            </div>
+                            <div class="files-list" id="filesList">
+                                <!-- File items will be added here dynamically -->
+                            </div>
+                            <div class="file-summary">
+                                <span>Total Size: <strong id="totalSize">0 KB</strong></span>
+                            </div>
+                            
+                            <!-- Document Preview Section -->
+                            <div id="documentPreviewSection" style="display: none; margin-top: 20px;">
+                                <h4 style="margin: 0 0 15px 0; color: var(--primary-color);">📄 Document Preview</h4>
+                                <div id="documentPreviews" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                            </div>
+                            
+                            <div class="button-group">
+                                <button type="button" class="btn btn-primary" id="uploadGenerateBtn">
+                                    <span class="btn-text">Generate Test Cases</span>
+                                    <span class="spinner" style="display: none;"></span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="output-section" id="outputSection" style="display: none;">
+                <div class="output-header">
+                    <h2>Generated Test Cases</h2>
+                    <div class="action-buttons">
+                        <button class="btn btn-warning" id="reviewBtn" title="Send for Test Lead Review">
+                            👤 Test Lead Review
+                        </button>
+                        <button class="btn btn-info" id="validateBtn" title="Validate test cases against user story">
+                            ✓ Validate Coverage
+                        </button>
+                        <button class="btn btn-success" id="downloadCsvBtn">
+                            📥 Download CSV
+                        </button>
+                        <button class="btn btn-success" id="downloadExcelBtn">
+                            📊 Download Excel
+                        </button>
+                        <button class="btn btn-success" id="downloadPdfBtn">
+                            📄 Download PDF
+                        </button>
+                        <button class="btn btn-secondary" id="copyBtn">
+                            📋 Copy to Clipboard
+                        </button>
+                    </div>
+                </div>
+
+                <div class="summary" id="summary"></div>
+                
+                <!-- Search and Filter Controls -->
+                <div id="testCaseSearchFilter" style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin: 20px 0;">
+                    <h4 style="margin: 0 0 15px 0; color: var(--primary-color); font-size: 1rem;">🔍 Search & Filter Test Cases</h4>
+                    <div style="display: grid; grid-template-columns: 2fr 1fr 1fr 1fr; gap: 10px; margin-bottom: 10px;">
+                        <div>
+                            <input type="text" id="testCaseSearchInput" class="form-control" placeholder="🔎 Search by scenario, description, steps..." style="width: 100%; padding: 8px;" />
+                        </div>
+                        <div>
+                            <select id="coverageFilter" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="">All Coverage Status</option>
+                                <option value="covered">Covered</option>
+                                <option value="not-covered">Not Covered</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="typeFilter" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="">All Test Types</option>
+                                <option value="positive">Positive</option>
+                                <option value="negative">Negative</option>
+                                <option value="edge">Edge Case</option>
+                            </select>
+                        </div>
+                        <div>
+                            <select id="testCaseSortBy" class="form-control" style="width: 100%; padding: 8px;">
+                                <option value="default">Default Order</option>
+                                <option value="scenario">Sort by Scenario</option>
+                                <option value="coverage">Sort by Coverage</option>
+                                <option value="type">Sort by Type</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                        <span id="testCaseFilteredCount" style="color: var(--text-secondary); font-size: 0.9rem;">Showing 0 test cases</span>
+                        <button type="button" id="clearTestCaseFilters" class="btn btn-secondary btn-sm" style="padding: 6px 12px; font-size: 0.85rem;">✖ Clear Filters</button>
+                    </div>
+                </div>
+
+                <!-- Test Lead Review Section -->
+                <div class="review-section" id="reviewSection" style="display: none;">
+                    <div class="review-header">
+                        <h3>👤 Test Lead / Manager Review</h3>
+                        <button class="toggle-review-btn" id="toggleReviewBtn">Show Review Panel</button>
+                    </div>
+                    <div class="review-content" id="reviewContent" style="display: none;">
+                        <div class="review-info">
+                            <p><strong>📝 Review Instructions:</strong> As a Test Lead or Manager, you can review these test cases and provide feedback to the creator.</p>
+                        </div>
+                        
+                        <div class="review-form">
+                            <div class="form-group">
+                                <label for="reviewerName">Your Name (Test Lead/Manager) <span class="required">*</span></label>
+                                <input type="text" id="reviewerName" class="form-control" placeholder="Enter your name" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="creatorEmail">Test Case Creator Email <span class="required">*</span></label>
+                                <input type="email" id="creatorEmail" class="form-control" placeholder="creator@example.com" />
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Review Status <span class="required">*</span></label>
+                                <div class="review-status-options">
+                                    <label class="radio-option approved">
+                                        <input type="radio" name="reviewStatus" value="approved" />
+                                        <span class="status-icon">✅</span>
+                                        <span>Approved</span>
+                                    </label>
+                                    <label class="radio-option changes-requested">
+                                        <input type="radio" name="reviewStatus" value="changes-requested" checked />
+                                        <span class="status-icon">🔄</span>
+                                        <span>Changes Requested</span>
+                                    </label>
+                                    <label class="radio-option rejected">
+                                        <input type="radio" name="reviewStatus" value="rejected" />
+                                        <span class="status-icon">❌</span>
+                                        <span>Rejected</span>
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="reviewComments">Review Comments / Queries <span class="required">*</span></label>
+                                <textarea id="reviewComments" rows="6" class="form-control" 
+                                    placeholder="Enter your feedback, queries, or suggestions for improvement...&#10;&#10;Examples:&#10;- Please add boundary test cases for field validation&#10;- TC-003 needs more detailed steps&#10;- Missing negative scenario for invalid date format"></textarea>
+                            </div>
+                            
+                            <div class="review-actions">
+                                <button class="btn btn-primary" id="submitReviewBtn">
+                                    📤 Submit Review & Notify Creator
+                                </button>
+                                <button class="btn btn-secondary" id="cancelReviewBtn">
+                                    Cancel
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <div class="review-preview" id="reviewPreview" style="display: none;">
+                            <h4>📧 Review Summary</h4>
+                            <div class="preview-content" id="previewContent"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coverage Analysis Section -->
+                <div class="coverage-analysis" id="coverageAnalysis" style="display: none;">
+                    <div class="coverage-header">
+                        <h3>📊 Story Coverage Analysis</h3>
+                        <button class="toggle-coverage-btn" id="toggleCoverageBtn">Hide</button>
+                    </div>
+                    <div class="coverage-content">
+                        <div class="coverage-section">
+                            <h4>Original User Story</h4>
+                            <div class="original-story" id="originalStory"></div>
+                        </div>
+                        <div class="coverage-section">
+                            <h4>Acceptance Criteria Coverage</h4>
+                            <div class="ac-coverage" id="acCoverage"></div>
+                        </div>
+                        <div class="coverage-section">
+                            <h4>Coverage Summary</h4>
+                            <div class="coverage-stats" id="coverageStats"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="validation-message" id="validationMessage" style="display: none;"></div>
+
+                <div class="test-cases-container" id="testCasesContainer"></div>
+            </div>
+        </main>
+
+        <footer>
+            <p>&copy; 2025 TestMate AI - Powered by HCL Cafe AI</p>
+        </footer>
+    </div>
+
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="loading-spinner"></div>
+        <p>Generating test cases...</p>
+    </div>
+
+    <!-- AMA Floating Widget -->
+    <div class="ama-floating-widget" id="amaFloatingWidget">
+        <!-- Toggle Button -->
+        <button class="ama-float-btn" id="amaFloatBtn" title="Ask Me Anything">
+            <svg class="ama-btn-icon" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                <line x1="9" y1="10" x2="15" y2="10"></line>
+                <line x1="12" y1="7" x2="12" y2="13"></line>
+            </svg>
+            <svg class="ama-btn-close" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="display: none;">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+            </svg>
+            <span class="ama-pulse-dot"></span>
+        </button>
+
+        <!-- Widget Container -->
+        <div class="ama-widget-container" id="amaWidgetContainer" style="display: none;">
+            <div class="ama-widget-header">
+                <div class="ama-header-icon">🤖</div>
+                <div class="ama-header-content">
+                    <h4>Ask Me Anything</h4>
+                    <p>Your AI Testing Assistant</p>
+                </div>
+            </div>
+            
+            <!-- Quick Questions -->
+            <div class="ama-quick-questions">
+                <button class="quick-question-btn" data-question="What are the best practices for writing test cases?">
+                    📋 Best Practices
+                </button>
+                <button class="quick-question-btn" data-question="How do I create effective edge case tests?">
+                    🎯 Edge Cases
+                </button>
+                <button class="quick-question-btn" data-question="How can I improve test coverage?">
+                    📊 Coverage
+                </button>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="ama-messages" id="amaMessages">
+                <div class="ama-message bot-message">
+                    <div class="message-avatar">🤖</div>
+                    <div class="message-bubble">
+                        <p>Hi! I'm your AI testing assistant. Ask me anything about test cases, testing strategies, or TestMate AI! 🚀</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Input Area -->
+            <div class="ama-input-area">
+                <div class="ama-input-wrapper">
+                    <input 
+                        type="text" 
+                        id="amaInput" 
+                        class="ama-input" 
+                        placeholder="Ask a question..." 
+                        autocomplete="off"
+                    />
+                    <button class="ama-send-btn" id="amaSendBtn">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="22" y1="2" x2="11" y2="13"></line>
+                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                        </svg>
+                    </button>
+                </div>
+                <div class="ama-typing-indicator" id="amaTyping" style="display: none;">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-text">Thinking...</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Draggable Testing Facts Widget -->
+    <div class="fact-widget" id="factWidget">
+        <div class="fact-widget-header" id="factWidgetHeader">
+            <span class="fact-icon">💡</span>
+            <span class="fact-title">Testing Fact</span>
+            <button class="fact-minimize-btn" id="factMinimizeBtn" title="Minimize">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+            </button>
+            <button class="fact-close-btn" id="factCloseBtn" title="Close">×</button>
+        </div>
+        <div class="fact-content" id="factContent">
+            <p class="fact-text" id="factText">Loading amazing testing fact...</p>
+        </div>
+        <div class="fact-footer" id="factFooter">
+            <div class="fact-progress" id="factProgress"></div>
+            <button class="fact-next-btn" id="factNextBtn" title="Next Fact">➤</button>
+        </div>
+    </div>
+
+    <!-- Notification Center -->
+    <div class="notification-center" id="notificationCenter" style="display: none;">
+        <div class="notification-center-header">
+            <h3>🔔 Notifications</h3>
+            <div class="notification-actions">
+                <button class="clear-all-btn" id="clearAllNotifications" title="Clear All">Clear All</button>
+                <button class="close-notifications-btn" id="closeNotifications" title="Close">×</button>
+            </div>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <div class="no-notifications">
+                <span class="no-notif-icon">🔔</span>
+                <p>No notifications yet</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Enhanced Testing Fact Sidebar Widget -->
+    <script src="js/app.js?v=20251229-chat-fix2"></script>
+    <script src="js/dark-mode.js?v=20251231"></script>
+    <script src="js/notification-center.js?v=20251231"></script>
+    <script src="js/ai-enhancements.js?v=20251231"></script>
+    <script src="js/help-system.js?v=20251231"></script>
+    <script src="js/jira-integration.js?v=20251224-v33"></script>
+    <script src="js/ama-gadget.js?v=20251231"></script>
+    <script src="js/fact-widget.js?v=20251231"></script>
+</body>
+</html>
