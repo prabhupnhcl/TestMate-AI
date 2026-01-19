@@ -249,7 +249,18 @@ public class TestCaseController {
         } catch (Exception e) {
             log.error("Error handling chat request", e);
             ChatResponse errorResponse = new ChatResponse();
-            errorResponse.setResponse("I apologize, but I encountered an error processing your question. Please try again.");
+            
+            // Provide more specific error message based on the exception
+            String errorMessage = "I apologize, but I encountered an error processing your question.";
+            if (e.getMessage() != null && e.getMessage().contains("401")) {
+                errorMessage = "The AI service is currently unavailable due to authentication issues. Please contact the administrator to verify the API key configuration.";
+            } else if (e.getMessage() != null && e.getMessage().contains("API")) {
+                errorMessage = "Unable to connect to the AI service. Please try again in a moment or contact support.";
+            } else {
+                errorMessage += " Please try asking in a different way.";
+            }
+            
+            errorResponse.setResponse(errorMessage);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(errorResponse);
         }
     }

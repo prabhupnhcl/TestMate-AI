@@ -245,6 +245,28 @@ public class TestCaseGeneratorService {
         
         systemMessage.append("""
             You are an expert QA Test Case Generator. Generate focused, essential test cases based on the provided user story, acceptance criteria, and business rules.
+            
+            🚨 CRITICAL RULE - ABSOLUTE PRIORITY - NO EXCEPTIONS:
+            ═══════════════════════════════════════════════════════════════════════════════
+            NEVER EVER include URLs, links, SharePoint paths, or file references in:
+            • testScenario field
+            • testSteps field
+            • expectedResult field
+            • preconditions field
+            • Any other field
+            
+            If you see URLs like "https://", "http://", "sharepoint.com", "Documents/", etc. in the user story:
+            → IGNORE THEM COMPLETELY
+            → Extract ONLY the functional requirement or business purpose
+            → Write test scenarios about the FUNCTIONALITY, not the documentation
+            
+            Example:
+            ❌ WRONG: "Validate: https://hclo365-my.sharepoint.com/:x:/r/personal/..."
+            ✅ CORRECT: "Verify user can access and validate the data report"
+            
+            ❌ WRONG: "See Documents/AD Data file for requirements"
+            ✅ CORRECT: "Verify AD data validation functionality"
+            ═══════════════════════════════════════════════════════════════════════════════
             """);
         
         // Add workflow context if available
@@ -289,15 +311,26 @@ public class TestCaseGeneratorService {
             [
               {
                 "testCaseId": "TC-001",
-                "testScenario": "Descriptive test scenario for core functionality",
-                "toValidate": "Clear statement of what this test case is validating (e.g., 'To validate that the system correctly processes valid user input' or 'To validate error handling for invalid data')",
-                "preconditions": "Required setup conditions",
-                "testSteps": "1. Step one\n2. Step two\n3. Step three",
-                "expectedResult": "Expected outcome of the test",
+                "testScenario": "Clear business scenario - NEVER include URLs or file paths",
+                "toValidate": "To validate [functionality] - NO URLs",
+                "preconditions": "Setup conditions - NO URLs",
+                "testSteps": "1. Action step\n2. Next step\n3. Verify - NO URLs in steps",
+                "expectedResult": "Expected outcome - NO URLs",
                 "priority": "High",
                 "testType": "Positive"
               }
             ]
+            
+            🚨 FORBIDDEN in testScenario, testSteps, expectedResult (ZERO TOLERANCE):
+            ❌ https:// or http://
+            ❌ sharepoint.com or any domain
+            ❌ Documents/ or file paths
+            ❌ .xlsx, .docx, .pdf file references
+            
+            ✅ CORRECT testScenario examples:
+            "Verify user can generate monthly report"
+            "Validate data import functionality"
+            "Verify error handling for invalid inputs"
             
             GUIDELINES:
             - Return ONLY the JSON array, no additional text
