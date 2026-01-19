@@ -255,6 +255,24 @@ public class TestCaseController {
     }
     
     /**
+     * Generate smart locator suggestions
+     */
+    @PostMapping("/locators/suggest")
+    public ResponseEntity<?> suggestLocators(@RequestBody LocatorRequest request) {
+        log.info("Received locator suggestion request for element: {}", request.getElementName());
+        
+        try {
+            LocatorResponse response = testCaseGeneratorService.generateLocatorSuggestions(request);
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            log.error("Error generating locator suggestions", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(new MessageResponse("Failed to generate locator suggestions: " + e.getMessage()));
+        }
+    }
+    
+    /**
      * Send review notification email
      */
     @PostMapping("/review/send")
@@ -313,5 +331,94 @@ public class TestCaseController {
         public ChatResponse(String response) { this.response = response; }
         public String getResponse() { return response; }
         public void setResponse(String response) { this.response = response; }
+    }
+    
+    /**
+     * Locator request model
+     */
+    public static class LocatorRequest {
+        private String elementName;
+        private String elementType;
+        private String elementText;
+        private String elementId;
+        private String elementClass;
+        private String parentElement;
+        private String context;
+        
+        public LocatorRequest() {}
+        
+        public String getElementName() { return elementName; }
+        public void setElementName(String elementName) { this.elementName = elementName; }
+        public String getElementType() { return elementType; }
+        public void setElementType(String elementType) { this.elementType = elementType; }
+        public String getElementText() { return elementText; }
+        public void setElementText(String elementText) { this.elementText = elementText; }
+        public String getElementId() { return elementId; }
+        public void setElementId(String elementId) { this.elementId = elementId; }
+        public String getElementClass() { return elementClass; }
+        public void setElementClass(String elementClass) { this.elementClass = elementClass; }
+        public String getParentElement() { return parentElement; }
+        public void setParentElement(String parentElement) { this.parentElement = parentElement; }
+        public String getContext() { return context; }
+        public void setContext(String context) { this.context = context; }
+    }
+    
+    /**
+     * Locator response model
+     */
+    public static class LocatorResponse {
+        private List<LocatorSuggestion> suggestions;
+        private String bestPractice;
+        
+        public LocatorResponse() {}
+        public LocatorResponse(List<LocatorSuggestion> suggestions, String bestPractice) {
+            this.suggestions = suggestions;
+            this.bestPractice = bestPractice;
+        }
+        
+        public List<LocatorSuggestion> getSuggestions() { return suggestions; }
+        public void setSuggestions(List<LocatorSuggestion> suggestions) { this.suggestions = suggestions; }
+        public String getBestPractice() { return bestPractice; }
+        public void setBestPractice(String bestPractice) { this.bestPractice = bestPractice; }
+    }
+    
+    /**
+     * Locator suggestion model
+     */
+    public static class LocatorSuggestion {
+        private String strategy;
+        private String locator;
+        private String priority;
+        private String reason;
+        private String example;
+        private Integer reliabilityScore;
+        private String seleniumJavaCode;
+        private String seleniumWaitCode;
+        
+        public LocatorSuggestion() {}
+        public LocatorSuggestion(String strategy, String locator, String priority, String reason, String example) {
+            this.strategy = strategy;
+            this.locator = locator;
+            this.priority = priority;
+            this.reason = reason;
+            this.example = example;
+        }
+        
+        public String getStrategy() { return strategy; }
+        public void setStrategy(String strategy) { this.strategy = strategy; }
+        public String getLocator() { return locator; }
+        public void setLocator(String locator) { this.locator = locator; }
+        public String getPriority() { return priority; }
+        public void setPriority(String priority) { this.priority = priority; }
+        public String getReason() { return reason; }
+        public void setReason(String reason) { this.reason = reason; }
+        public String getExample() { return example; }
+        public void setExample(String example) { this.example = example; }
+        public Integer getReliabilityScore() { return reliabilityScore; }
+        public void setReliabilityScore(Integer reliabilityScore) { this.reliabilityScore = reliabilityScore; }
+        public String getSeleniumJavaCode() { return seleniumJavaCode; }
+        public void setSeleniumJavaCode(String seleniumJavaCode) { this.seleniumJavaCode = seleniumJavaCode; }
+        public String getSeleniumWaitCode() { return seleniumWaitCode; }
+        public void setSeleniumWaitCode(String seleniumWaitCode) { this.seleniumWaitCode = seleniumWaitCode; }
     }
 }

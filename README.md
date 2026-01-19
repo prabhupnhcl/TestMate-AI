@@ -116,7 +116,7 @@ hcl.cafe.ai.base-url=https://aicafe.hcl.com/AICafeService/api/v1/subscription/op
 hcl.cafe.ai.deployment-name=gpt-4.1
 hcl.cafe.ai.api-version=2024-12-01-preview
 hcl.cafe.ai.model=gpt-4.1
-hcl.cafe.ai.max-tokens=4000
+hcl.cafe.ai.max-tokens=10000
 hcl.cafe.ai.temperature=0.7
 ```
 

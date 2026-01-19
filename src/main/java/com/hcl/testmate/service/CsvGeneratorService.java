@@ -22,6 +22,7 @@ public class CsvGeneratorService {
         "ID",
         "Has attachments",
         "Name",
+        "To Validate",
         "Testing tool type",
         "Planned",
         "Passed",
@@ -53,6 +54,7 @@ public class CsvGeneratorService {
                     testCase.getTestCaseId(),          // ID
                     "No",                                // Has attachments
                     formatTestScenario(testCase.getTestScenario()),         // Name (wrap text)
+                    formatMultilineField(testCase.getToValidate()),         // To Validate
                     "Manual Runner",                     // Testing tool type
                     "",                                  // Planned (empty)
                     "",                                  // Passed (empty)

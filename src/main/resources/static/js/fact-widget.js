@@ -1,6 +1,6 @@
 /**
- * Draggable Testing Facts Widget
- * Shows random testing facts every 15 seconds
+ * Bottom Flash Testing Facts Widget
+ * Shows random testing facts every 15 seconds in a flash banner at the bottom
  */
 
 // Array of testing facts
@@ -35,13 +35,6 @@ const testingFacts = [
 // Widget state
 let currentFactIndex = 0;
 let factInterval = null;
-let isDragging = false;
-let currentX = 0;
-let currentY = 0;
-let initialX = 0;
-let initialY = 0;
-let xOffset = 0;
-let yOffset = 0;
 
 /**
  * Initialize the fact widget
@@ -52,7 +45,6 @@ function initFactWidget() {
     const factNextBtn = document.getElementById('factNextBtn');
     const factCloseBtn = document.getElementById('factCloseBtn');
     const factMinimizeBtn = document.getElementById('factMinimizeBtn');
-    const factWidgetHeader = document.getElementById('factWidgetHeader');
     const factProgress = document.getElementById('factProgress');
     const factContent = document.getElementById('factContent');
     const factFooter = document.getElementById('factFooter');
@@ -82,10 +74,10 @@ function initFactWidget() {
             // Update icon
             const svg = factMinimizeBtn.querySelector('svg');
             if (isMinimized) {
-                svg.innerHTML = '<polyline points="18 15 12 9 6 15" stroke-width="2"></polyline>';
+                svg.innerHTML = '<polyline points="6 15 12 9 18 15" stroke-width="2"></polyline>';
                 factMinimizeBtn.title = 'Expand';
             } else {
-                svg.innerHTML = '<line x1="5" y1="12" x2="19" y2="12" stroke-width="2"></line>';
+                svg.innerHTML = '<polyline points="6 9 12 15 18 9" stroke-width="2"></polyline>';
                 factMinimizeBtn.title = 'Minimize';
             }
         });
@@ -94,6 +86,8 @@ function initFactWidget() {
     // Next button click
     if (factNextBtn) {
         factNextBtn.addEventListener('click', () => {
+            factWidget.classList.add('flash-pulse');
+            setTimeout(() => factWidget.classList.remove('flash-pulse'), 800);
             resetProgressBar();
             showRandomFact();
             restartFactRotation();
@@ -108,18 +102,6 @@ function initFactWidget() {
         });
     }
     
-    // Make widget draggable
-    if (factWidgetHeader) {
-        factWidgetHeader.addEventListener('mousedown', dragStart);
-        document.addEventListener('mousemove', drag);
-        document.addEventListener('mouseup', dragEnd);
-        
-        // Touch events for mobile
-        factWidgetHeader.addEventListener('touchstart', dragStart);
-        document.addEventListener('touchmove', drag);
-        document.addEventListener('touchend', dragEnd);
-    }
-    
     /**
      * Show a random fact
      */
@@ -132,11 +114,13 @@ function initFactWidget() {
         
         currentFactIndex = newIndex;
         
-        // Animate text change
+        // Animate text change with flash effect
         factText.style.animation = 'none';
+        factWidget.classList.add('flash-pulse');
         setTimeout(() => {
             factText.textContent = testingFacts[currentFactIndex];
             factText.style.animation = 'factFadeIn 0.5s ease-out';
+            setTimeout(() => factWidget.classList.remove('flash-pulse'), 800);
         }, 10);
     }
     
@@ -177,71 +161,6 @@ function initFactWidget() {
         setTimeout(() => {
             factProgress.style.animation = '';
         }, 10);
-    }
-    
-    /**
-     * Drag start handler
-     */
-    function dragStart(e) {
-        if (e.type === 'touchstart') {
-            initialX = e.touches[0].clientX - xOffset;
-            initialY = e.touches[0].clientY - yOffset;
-        } else {
-            initialX = e.clientX - xOffset;
-            initialY = e.clientY - yOffset;
-        }
-        
-        if (e.target === factWidgetHeader || factWidgetHeader.contains(e.target)) {
-            // Don't start drag if clicking close or minimize button
-            if (!e.target.classList.contains('fact-close-btn') && 
-                !e.target.classList.contains('fact-minimize-btn') &&
-                !e.target.closest('.fact-close-btn') &&
-                !e.target.closest('.fact-minimize-btn')) {
-                isDragging = true;
-                factWidget.classList.add('dragging');
-            }
-        }
-    }
-    
-    /**
-     * Drag handler
-     */
-    function drag(e) {
-        if (isDragging) {
-            e.preventDefault();
-            
-            if (e.type === 'touchmove') {
-                currentX = e.touches[0].clientX - initialX;
-                currentY = e.touches[0].clientY - initialY;
-            } else {
-                currentX = e.clientX - initialX;
-                currentY = e.clientY - initialY;
-            }
-            
-            xOffset = currentX;
-            yOffset = currentY;
-            
-            setTranslate(currentX, currentY, factWidget);
-        }
-    }
-    
-    /**
-     * Drag end handler
-     */
-    function dragEnd(e) {
-        if (isDragging) {
-            initialX = currentX;
-            initialY = currentY;
-            isDragging = false;
-            factWidget.classList.remove('dragging');
-        }
-    }
-    
-    /**
-     * Set element position
-     */
-    function setTranslate(xPos, yPos, el) {
-        el.style.transform = `translate(${xPos}px, ${yPos}px)`;
     }
 }
 

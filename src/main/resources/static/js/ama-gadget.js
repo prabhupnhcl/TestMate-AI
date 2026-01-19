@@ -53,13 +53,32 @@ function initAMAGadget() {
         // Show typing indicator
         if (amaTyping) amaTyping.style.display = 'flex';
         
-        // Simulate AI response (replace with actual API call)
-        setTimeout(() => {
-            const response = getAMAResponse(question);
-            addAMAMessage(response, 'bot');
+        try {
+            // Call the actual backend API
+            const response = await fetch('/testmate/api/testcases/chat', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message: question })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`API error: ${response.status}`);
+            }
+            
+            const data = await response.json();
+            const botResponse = data.response || "I apologize, but I couldn't generate a response. Please try again.";
+            
+            addAMAMessage(botResponse, 'bot');
+            
+        } catch (error) {
+            console.error('Error sending chat message:', error);
+            addAMAMessage("I apologize, but I encountered an error processing your question. Please try again.", 'bot');
+        } finally {
             if (amaTyping) amaTyping.style.display = 'none';
             amaSendBtn.disabled = false;
-        }, 1500 + Math.random() * 1000);
+        }
     };
     
     // Add message to chat

@@ -206,12 +206,7 @@ if (document.readyState === 'loading') {
     initNotificationCenter();
 }
 
-// Show welcome notification after a short delay
-setTimeout(() => {
-    if (typeof showToast === 'function') {
-        showToast('Welcome to TestMate AI', 'Generate high-quality test cases with AI assistance', 'info', 5000);
-    }
-}, 1000);
+// Welcome notification disabled - users can use the app without interruption
 
 // Expose functions globally for use in other scripts
 window.showToast = showToast;

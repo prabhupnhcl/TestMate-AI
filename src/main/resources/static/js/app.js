@@ -459,11 +459,15 @@ function switchTab(tabName) {
     const jiraTab = document.getElementById('jiraTab');
     const manualTab = document.getElementById('manualTab');
     const uploadTab = document.getElementById('uploadTab');
+    const locatorsTab = document.getElementById('locatorsTab');
+    const notesTab = document.getElementById('notesTab');
     
     // Remove active from all tabs
     if (jiraTab) jiraTab.classList.remove('active');
     if (manualTab) manualTab.classList.remove('active');
     if (uploadTab) uploadTab.classList.remove('active');
+    if (locatorsTab) locatorsTab.classList.remove('active');
+    if (notesTab) notesTab.classList.remove('active');
     
     // Add active to selected tab
     if (tabName === 'jira' && jiraTab) {
@@ -472,6 +476,10 @@ function switchTab(tabName) {
         manualTab.classList.add('active');
     } else if (tabName === 'upload' && uploadTab) {
         uploadTab.classList.add('active');
+    } else if (tabName === 'locators' && locatorsTab) {
+        locatorsTab.classList.add('active');
+    } else if (tabName === 'notes' && notesTab) {
+        notesTab.classList.add('active');
     }
     
     hideOutput();
@@ -1301,12 +1309,13 @@ function downloadDocumentCsv(fileName, docIndex) {
  * Generate CSV content from test cases array
  */
 function generateCsvFromTestCases(testCases, fileName) {
-    let csv = 'Test Case ID,Test Scenario,Preconditions,Test Steps,Expected Result,Priority,Test Type,JIRA Issue\n';
+    let csv = 'Test Case ID,Test Scenario,To Validate,Preconditions,Test Steps,Expected Result,Priority,Test Type,JIRA Issue\n';
     
     testCases.forEach((tc, index) => {
         const row = [
             tc.testCaseId || `TC-${String(index + 1).padStart(3, '0')}`,
             escapeCsvField(tc.testCase || tc.testScenario || ''),
+            escapeCsvField(tc.toValidate || 'To validate the functionality'),
             escapeCsvField(tc.precondition || tc.preconditions || ''),
             escapeCsvField(tc.testSteps || ''),
             escapeCsvField(tc.expectedResult || ''),
@@ -1528,6 +1537,11 @@ function createTestCaseCard(testCase, index) {
         <div class="test-case-section">
             <div class="test-case-label">Test Scenario</div>
             <div class="test-case-content">${escapeHtml(testCase.testScenario)}</div>
+        </div>
+        
+        <div class="test-case-section" style="background: #f0f9ff; border-left: 3px solid #3b82f6; padding: 12px; margin: 10px 0; border-radius: 6px;">
+            <div class="test-case-label" style="color: #1e40af; font-weight: 600;">🎯 To Validate</div>
+            <div class="test-case-content" style="color: #1e3a8a; font-style: italic;">${escapeHtml(testCase.toValidate || 'To validate the functionality')}</div>
         </div>
         
         <div class="test-case-section">

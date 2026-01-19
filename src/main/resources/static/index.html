@@ -4,8 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TestMate AI - QA Test Case Generator</title>
-    <link rel="stylesheet" href="css/dashboard-enhanced.css?v=20251226-fix">
-    <link rel="stylesheet" href="css/styles.css?v=20251229-btn-fix">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%232563eb;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%2310b981;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='100' height='100' rx='20' fill='url(%23grad)'/%3E%3Ctext x='50' y='60' font-family='Arial,sans-serif' font-size='50' font-weight='bold' fill='white' text-anchor='middle'%3ETM%3C/text%3E%3Cpath d='M 70 25 L 75 30 L 60 45 L 55 40 Z' fill='%2310b981' stroke='white' stroke-width='2'/%3E%3C/svg%3E">
+    <link rel="stylesheet" href="css/dashboard-enhanced.css?v=20260108-logo">
+    <link rel="stylesheet" href="css/styles.css?v=20260108-logo">
+    <link rel="stylesheet" href="css/locators.css?v=20260108-logo">
+    <link rel="stylesheet" href="css/notes.css?v=20260108-notes">
 
 </head>
 <body>
@@ -13,7 +16,20 @@
         <header>
             <div class="header-content">
                 <div class="header-left">
-                    <h1><span class="logo-text">TestMate</span> <span class="logo-ai">AI</span></h1>
+                    <div class="logo-container">
+                        <svg class="app-logo" width="48" height="48" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+                            <defs>
+                                <linearGradient id="logoGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                    <stop offset="0%" style="stop-color:#2563eb;stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                            <rect width="100" height="100" rx="20" fill="url(#logoGrad)"/>
+                            <text x="50" y="65" font-family="Arial,sans-serif" font-size="50" font-weight="bold" fill="white" text-anchor="middle">TM</text>
+                            <path d="M 70 25 L 75 30 L 60 45 L 55 40 Z" fill="#10b981" stroke="white" stroke-width="2"/>
+                        </svg>
+                        <h1><span class="logo-text">TestMate</span> <span class="logo-ai">AI</span></h1>
+                    </div>
                     <p class="exclusive-tag">(Exclusively for SARB)</p>
                     <p class="subtitle">AI-Powered QA Test Case Generator</p>
                 </div>
@@ -80,6 +96,8 @@
                     <button class="tab-button active" data-tab="jira">🔗 JIRA Integration</button>
                     <button class="tab-button" data-tab="manual">📝 Manual Entry</button>
                     <button class="tab-button" data-tab="upload">📄 Upload Document</button>
+                    <button class="tab-button" data-tab="locators">🎯 Smart Locators</button>
+                    <button class="tab-button" data-tab="notes">📓 Notes</button>
 
                 </div>
                 
@@ -309,6 +327,159 @@
                             <button type="button" class="btn btn-secondary" id="clearBtn">Clear Form</button>
                         </div>
                     </form>
+                </div>
+                
+                <!-- Smart Locators Tab -->
+                <div id="locatorsTab" class="tab-content">
+                    <div class="locators-section">
+                        <div class="locators-info">
+                            <div class="info-icon">🎯</div>
+                            <div>
+                                <h3>Smart Locator Suggestions</h3>
+                                <p>Get AI-powered recommendations for robust element locators in test automation</p>
+                            </div>
+                        </div>
+                        
+                        <form id="locatorForm">
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="elementName">Element Name <span class="required">*</span></label>
+                                    <input 
+                                        type="text" 
+                                        id="elementName" 
+                                        placeholder="e.g., Login Button, Username Field" 
+                                        required
+                                    />
+                                    <small class="help-text">Describe what the element does</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="elementType">Element Type <span class="required">*</span></label>
+                                    <select id="elementType" required>
+                                        <option value="">-- Select Type --</option>
+                                        <option value="button">Button</option>
+                                        <option value="input">Input Field</option>
+                                        <option value="link">Link</option>
+                                        <option value="div">Div/Container</option>
+                                        <option value="span">Span</option>
+                                        <option value="checkbox">Checkbox</option>
+                                        <option value="radio">Radio Button</option>
+                                        <option value="select">Dropdown</option>
+                                        <option value="textarea">Text Area</option>
+                                        <option value="other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="elementText">Element Text</label>
+                                    <input 
+                                        type="text" 
+                                        id="elementText" 
+                                        placeholder="Visible text on the element"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label for="elementId">Element ID</label>
+                                    <input 
+                                        type="text" 
+                                        id="elementId" 
+                                        placeholder="HTML id attribute"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div class="form-row">
+                                <div class="form-group">
+                                    <label for="elementClass">Element Class(es)</label>
+                                    <input 
+                                        type="text" 
+                                        id="elementClass" 
+                                        placeholder="CSS class names"
+                                    />
+                                </div>
+                                <div class="form-group">
+                                    <label for="parentElement">Parent Element</label>
+                                    <input 
+                                        type="text" 
+                                        id="parentElement" 
+                                        placeholder="Parent container info"
+                                    />
+                                </div>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label for="elementContext">Additional Context</label>
+                                <textarea 
+                                    id="elementContext" 
+                                    rows="3"
+                                    placeholder="Any additional details about the element or page..."
+                                ></textarea>
+                            </div>
+
+                            <div class="button-group">
+                                <button type="submit" class="btn btn-primary" id="suggestLocatorsBtn">
+                                    <span class="btn-text">🎯 Get Smart Suggestions</span>
+                                    <span class="spinner" style="display: none;"></span>
+                                </button>
+                                <button type="button" class="btn btn-secondary" id="clearLocatorBtn">Clear Form</button>
+                            </div>
+                        </form>
+                        
+                        <!-- Locator Suggestions Results -->
+                        <div id="locatorSuggestionsResults" style="display: none; margin-top: 30px;">
+                            <h3>📍 Locator Suggestions</h3>
+                            <div id="bestPracticeBox" class="best-practice-box"></div>
+                            <div id="locatorSuggestionsList" class="locator-suggestions-list"></div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Notes Tab -->
+                <div id="notesTab" class="tab-content">
+                    <div class="notes-section">
+                        <div class="notes-info">
+                            <div class="info-icon">📓</div>
+                            <div class="info-text">
+                                <h3>Personal Notes & Reference</h3>
+                                <p>Keep your testing notes, ideas, and reference information handy. All notes are saved automatically in your browser.</p>
+                            </div>
+                        </div>
+
+                        <div class="notes-toolbar">
+                            <button id="saveNoteBtn" class="btn btn-primary" title="Save Notes (Ctrl+S)">
+                                💾 Save
+                            </button>
+                            <button id="clearNoteBtn" class="btn btn-secondary" title="Clear Notes">
+                                🗑️ Clear
+                            </button>
+                            <button id="copyNoteBtn" class="btn btn-secondary" title="Copy to Clipboard">
+                                📋 Copy
+                            </button>
+                            <button id="downloadNoteBtn" class="btn btn-secondary" title="Download as Text File">
+                                ⬇️ Download
+                            </button>
+                            <span class="note-status" id="noteStatus"></span>
+                        </div>
+
+                        <div class="notes-editor">
+                            <textarea id="notesTextarea" class="notes-textarea" placeholder="Start typing your notes here...
+
+• Meeting notes
+• Test scenarios
+• Bug descriptions
+• Reference links
+• Anything you need to remember!
+
+Your notes are automatically saved to your browser's local storage."></textarea>
+                        </div>
+
+                        <div class="notes-stats">
+                            <span id="charCount">0 characters</span> • 
+                            <span id="wordCount">0 words</span> • 
+                            <span id="lineCount">0 lines</span>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Upload Document Tab -->
@@ -544,7 +715,28 @@
         <!-- Widget Container -->
         <div class="ama-widget-container" id="amaWidgetContainer" style="display: none;">
             <div class="ama-widget-header">
-                <div class="ama-header-icon">🤖</div>
+                <div class="ama-header-icon">
+                    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg" style="width: 40px; height: 40px;">
+                        <circle cx="32" cy="32" r="30" fill="#3b82f6"/>
+                        <circle cx="32" cy="32" r="28" fill="url(#amaGrad)"/>
+                        <defs>
+                            <linearGradient id="amaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" style="stop-color:#3b82f6"/>
+                                <stop offset="100%" style="stop-color:#8b5cf6"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Eyes -->
+                        <circle cx="22" cy="26" r="3" fill="white"/>
+                        <circle cx="42" cy="26" r="3" fill="white"/>
+                        <!-- Smile -->
+                        <path d="M 20 38 Q 32 45 44 38" stroke="white" stroke-width="3" fill="none" stroke-linecap="round"/>
+                        <!-- Antennas -->
+                        <line x1="18" y1="12" x2="14" y2="6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="14" cy="6" r="2" fill="#fbbf24"/>
+                        <line x1="46" y1="12" x2="50" y2="6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                        <circle cx="50" cy="6" r="2" fill="#fbbf24"/>
+                    </svg>
+                </div>
                 <div class="ama-header-content">
                     <h4>Ask Me Anything</h4>
                     <p>Your AI Testing Assistant</p>
@@ -601,25 +793,22 @@
         </div>
     </div>
 
-    <!-- Draggable Testing Facts Widget -->
+    <!-- Bottom Flash Testing Facts Widget -->
     <div class="fact-widget" id="factWidget">
-        <div class="fact-widget-header" id="factWidgetHeader">
-            <span class="fact-icon">💡</span>
-            <span class="fact-title">Testing Fact</span>
-            <button class="fact-minimize-btn" id="factMinimizeBtn" title="Minimize">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
-                </svg>
-            </button>
-            <button class="fact-close-btn" id="factCloseBtn" title="Close">×</button>
-        </div>
+        <span class="fact-icon">💡</span>
         <div class="fact-content" id="factContent">
             <p class="fact-text" id="factText">Loading amazing testing fact...</p>
         </div>
         <div class="fact-footer" id="factFooter">
-            <div class="fact-progress" id="factProgress"></div>
+            <button class="fact-minimize-btn" id="factMinimizeBtn" title="Minimize">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
+            </button>
             <button class="fact-next-btn" id="factNextBtn" title="Next Fact">➤</button>
+            <button class="fact-close-btn" id="factCloseBtn" title="Close">×</button>
         </div>
+        <div class="fact-progress" id="factProgress"></div>
     </div>
 
     <!-- Notification Center -->
@@ -651,5 +840,7 @@
     <script src="js/jira-integration.js?v=20251224-v33"></script>
     <script src="js/ama-gadget.js?v=20251231"></script>
     <script src="js/fact-widget.js?v=20251231"></script>
+    <script src="js/smart-locators.js"></script>
+    <script src="js/notes.js?v=20260108"></script>
 </body>
 </html>

@@ -6,6 +6,7 @@ package com.hcl.testmate.model;
 public class TestCase {
     private String testCaseId;
     private String testScenario;
+    private String toValidate;
     private String preconditions;
     private String testSteps;
     private String expectedResult;
@@ -14,9 +15,10 @@ public class TestCase {
 
     public TestCase() {}
 
-    public TestCase(String testCaseId, String testScenario, String preconditions, String testSteps, String expectedResult, String priority, String testType) {
+    public TestCase(String testCaseId, String testScenario, String toValidate, String preconditions, String testSteps, String expectedResult, String priority, String testType) {
         this.testCaseId = testCaseId;
         this.testScenario = testScenario;
+        this.toValidate = toValidate;
         this.preconditions = preconditions;
         this.testSteps = testSteps;
         this.expectedResult = expectedResult;
@@ -31,6 +33,7 @@ public class TestCase {
     public static class Builder {
         private String testCaseId;
         private String testScenario;
+        private String toValidate;
         private String preconditions;
         private String testSteps;
         private String expectedResult;
@@ -39,18 +42,20 @@ public class TestCase {
 
         public Builder testCaseId(String testCaseId) { this.testCaseId = testCaseId; return this; }
         public Builder testScenario(String testScenario) { this.testScenario = testScenario; return this; }
+        public Builder toValidate(String toValidate) { this.toValidate = toValidate; return this; }
         public Builder preconditions(String preconditions) { this.preconditions = preconditions; return this; }
         public Builder testSteps(String testSteps) { this.testSteps = testSteps; return this; }
         public Builder expectedResult(String expectedResult) { this.expectedResult = expectedResult; return this; }
         public Builder priority(String priority) { this.priority = priority; return this; }
         public Builder testType(String testType) { this.testType = testType; return this; }
         public TestCase build() {
-            return new TestCase(testCaseId, testScenario, preconditions, testSteps, expectedResult, priority, testType);
+            return new TestCase(testCaseId, testScenario, toValidate, preconditions, testSteps, expectedResult, priority, testType);
         }
     }
 
     public String getTestCaseId() { return testCaseId; }
     public String getTestScenario() { return testScenario; }
+    public String getToValidate() { return toValidate; }
     public String getPreconditions() { return preconditions; }
     public String getTestSteps() { return testSteps; }
     public String getExpectedResult() { return expectedResult; }
@@ -59,6 +64,7 @@ public class TestCase {
 
     public void setTestCaseId(String testCaseId) { this.testCaseId = testCaseId; }
     public void setTestScenario(String testScenario) { this.testScenario = testScenario; }
+    public void setToValidate(String toValidate) { this.toValidate = toValidate; }
     public void setPreconditions(String preconditions) { this.preconditions = preconditions; }
     public void setTestSteps(String testSteps) { this.testSteps = testSteps; }
     public void setExpectedResult(String expectedResult) { this.expectedResult = expectedResult; }
