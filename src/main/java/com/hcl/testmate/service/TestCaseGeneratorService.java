@@ -55,6 +55,15 @@ public class TestCaseGeneratorService {
 
             // Extract JIRA story key if present in user story
             String jiraKey = extractJiraKey(request.getUserStory());
+            log.debug("Extracted JIRA key: {}", jiraKey);
+            
+            // Determine workflow type from JIRA key or user story content
+            String workflowType = determineWorkflowType(jiraKey, request.getUserStory());
+            log.info("Determined workflow type: {} for story: {}", 
+                workflowType != null ? workflowType : "default (VS4)", 
+                request.getUserStory() != null && request.getUserStory().length() > 50 
+                    ? request.getUserStory().substring(0, 50) + "..." 
+                    : request.getUserStory());
             
             // Check cache if JIRA key is found
             if (jiraKey != null && testCaseCache.containsKey(jiraKey)) {
@@ -89,7 +98,7 @@ public class TestCaseGeneratorService {
             List<TestCase> testCases = new ArrayList<>();
             
             try {
-                testCases = generateTestCasesWithAi(request);
+                testCases = generateTestCasesWithAi(request, workflowType);
                 log.info("AI service returned {} test cases", testCases != null ? testCases.size() : 0);
             } catch (Exception e) {
                 log.warn("AI service failed, falling back to template-based generation: {}", e.getMessage());
@@ -173,10 +182,10 @@ public class TestCaseGeneratorService {
         }
     }
 
-    private List<TestCase> generateTestCasesWithAi(JiraStoryRequest request) throws Exception {
-        log.info("Generating test cases using AI service...");
+    private List<TestCase> generateTestCasesWithAi(JiraStoryRequest request, String workflowType) throws Exception {
+        log.info("Generating test cases using AI service with workflow type: {}", workflowType != null ? workflowType : "default");
         
-        String systemMessage = buildTestCaseGenerationSystemMessage();
+        String systemMessage = buildTestCaseGenerationSystemMessage(workflowType);
         String userMessage = buildTestCaseGenerationUserMessage(request);
         
         log.debug("System message length: {} chars", systemMessage.length());
@@ -240,7 +249,7 @@ public class TestCaseGeneratorService {
         return message.toString();
     }
 
-    private String buildTestCaseGenerationSystemMessage() {
+    private String buildTestCaseGenerationSystemMessage(String workflowType) {
         StringBuilder systemMessage = new StringBuilder();
         
         systemMessage.append("""
@@ -269,8 +278,31 @@ public class TestCaseGeneratorService {
             ═══════════════════════════════════════════════════════════════════════════════
             """);
         
-        // Add workflow context if available
-        if (workflowService.isWorkflowAvailable()) {
+        // Add workflow context based on detected workflow type
+        String effectiveWorkflowType = workflowType;
+        
+        // If workflowType is provided and available, use it; otherwise use default
+        if (effectiveWorkflowType != null && workflowService.isWorkflowAvailable(effectiveWorkflowType)) {
+            systemMessage.append("\n");
+            systemMessage.append(String.format("IMPORTANT: %s Application Workflow Documentation is provided below. Use this workflow to generate accurate and context-aware test steps that align with the actual application behavior.\n\n", effectiveWorkflowType));
+            systemMessage.append(String.format("**APPLICATION WORKFLOW (%s):**\n", effectiveWorkflowType));
+            systemMessage.append(workflowService.getWorkflowContent(effectiveWorkflowType));
+            systemMessage.append("\n\n");
+            systemMessage.append("""
+            When generating test steps:
+            - CRITICAL: Extract specific entities from the user story (report names, screen names, field names, etc.) and use them in test steps
+            - DO NOT use generic placeholders - if the user story mentions "Credit Risk Report", use "Credit Risk Report" NOT "Fit and Proper Report"
+            - Use general terminology for actions: instead of "Select 1 declaration" or "Select 2 declaration", use "Select the declaration" or "Select a declaration"
+            - Avoid numbering items unless specifically required by the user story
+            - Reference the specific workflow steps and screens from the documentation
+            - Ensure test steps follow the actual navigation and interaction patterns described
+            - Use terminology and field names consistent with the workflow documentation
+            - Consider workflow dependencies and prerequisites mentioned in the documentation
+            - Adapt the workflow pattern to the specific entities mentioned in the user story
+            
+            """);
+        } else if (workflowService.isWorkflowAvailable()) {
+            // Fall back to default workflow
             systemMessage.append("""
             
             IMPORTANT: Application Workflow Documentation is provided below. Use this workflow to generate accurate and context-aware test steps that align with the actual application behavior.
@@ -1301,6 +1333,42 @@ public class TestCaseGeneratorService {
         }
         
         log.debug("No JIRA key found in user story");
+        return null;
+    }
+    
+    /**
+     * Determine the appropriate workflow type based on JIRA key or user story content
+     * When fetching from JIRA, the userStory contains [key] summary + description,
+     * so this will detect VS2/VS4 from the JIRA description automatically.
+     * 
+     * @param jiraKey - JIRA story key (e.g., R2CX-7237)
+     * @param userStory - user story text (includes JIRA description when fetched from JIRA)
+     * @return workflow type (VS2, VS4, or null if cannot be determined)
+     */
+    private String determineWorkflowType(String jiraKey, String userStory) {
+        log.debug("Determining workflow type - JIRA Key: {}, User Story length: {}", 
+            jiraKey, userStory != null ? userStory.length() : 0);
+        
+        // First try to determine from JIRA key
+        if (jiraKey != null) {
+            String workflowType = workflowService.determineWorkflowType(jiraKey);
+            if (workflowType != null) {
+                log.info("Workflow type determined from JIRA key: {}", workflowType);
+                return workflowType;
+            }
+        }
+        
+        // Then try to determine from user story content (includes JIRA summary + description)
+        if (userStory != null) {
+            String workflowType = workflowService.determineWorkflowTypeFromStory(userStory);
+            if (workflowType != null) {
+                log.info("Workflow type determined from user story content: {}", workflowType);
+                return workflowType;
+            }
+        }
+        
+        // Default to null (system will use default workflow - VS4)
+        log.debug("No specific workflow type detected, will use default (VS4)");
         return null;
     }
     

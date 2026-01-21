@@ -11,7 +11,8 @@ An AI-Powered QA Agent that behaves as a Senior QA Engineer, analyzing JIRA stor
 - **Professional UI**: Clean, modern web interface for easy interaction
 - **Duplicate Detection**: Automatically removes duplicate test cases
 - **QA Best Practices**: Follows senior QA engineer standards
-- ** AI Chatbot**: Interactive "Ask Me Anything" assistant with modern glassmorphism UI
+- **AI Chatbot**: Interactive "Ask Me Anything" assistant with modern glassmorphism UI
+- **Multi-Workflow Support**: Automatically detects and uses VS2 or VS4 workflows based on story content
 - **📄 Multi-Document Support**: Upload and process multiple documents simultaneously
 - **📧 Email Integration**: Send test cases directly via email
 - **📊 Coverage Analysis**: Validate test coverage against requirements
@@ -118,7 +119,26 @@ hcl.cafe.ai.api-version=2024-12-01-preview
 hcl.cafe.ai.model=gpt-4.1
 hcl.cafe.ai.max-tokens=10000
 hcl.cafe.ai.temperature=0.7
+
+# Workflow Document Configuration (NEW!)
+workflow.vs4.document.path=Application Workflow for VS4 Functionality.docx
+workflow.vs2.document.path=VS2 Flow.docx
 ```
+
+### Multi-Workflow Support
+
+TestMate AI now supports multiple application workflows:
+
+- **VS4 Workflow**: For Value Stream 4 stories
+- **VS2 Workflow**: For Value Stream 2 stories
+
+The system automatically detects which workflow to use based on:
+1. JIRA story key (e.g., if key contains "VS2" or "VS-2")
+2. User story content (mentions of "VS2", "Value Stream 2", etc.)
+
+Place your workflow documents (`Application Workflow for VS4 Functionality.docx` and `VS2 Flow.docx`) in the project root directory.
+
+See [WORKFLOW_INTEGRATION.md](WORKFLOW_INTEGRATION.md) for detailed information.
 
 ## 📝 Usage
 
