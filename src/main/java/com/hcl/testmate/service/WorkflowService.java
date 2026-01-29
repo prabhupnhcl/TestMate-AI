@@ -73,15 +73,32 @@ public class WorkflowService {
         try {
             log.info("Loading {} workflow document from: {}", workflowType, documentPath);
             
-            File workflowFile = new File(documentPath);
+            InputStream inputStream = null;
             
-            if (!workflowFile.exists()) {
-                log.warn("{} workflow document not found at: {}", workflowType, workflowFile.getAbsolutePath());
-                workflowLoadedStatus.put(workflowType, false);
-                return;
+            // Try loading from classpath first (works in JAR)
+            try {
+                inputStream = getClass().getClassLoader().getResourceAsStream(documentPath);
+                if (inputStream != null) {
+                    log.info("Loaded {} workflow document from classpath", workflowType);
+                }
+            } catch (Exception e) {
+                log.debug("Could not load from classpath: {}", e.getMessage());
             }
             
-            String content = extractTextFromDocx(new FileInputStream(workflowFile));
+            // If not found in classpath, try loading from file system (works in development)
+            if (inputStream == null) {
+                File workflowFile = new File(documentPath);
+                if (workflowFile.exists()) {
+                    inputStream = new FileInputStream(workflowFile);
+                    log.info("Loaded {} workflow document from file system: {}", workflowType, workflowFile.getAbsolutePath());
+                } else {
+                    log.warn("{} workflow document not found in classpath or file system: {}", workflowType, documentPath);
+                    workflowLoadedStatus.put(workflowType, false);
+                    return;
+                }
+            }
+            
+            String content = extractTextFromDocx(inputStream);
             
             if (content != null && !content.trim().isEmpty()) {
                 workflowContents.put(workflowType, content);
