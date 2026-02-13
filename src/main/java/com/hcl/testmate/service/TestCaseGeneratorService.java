@@ -118,14 +118,14 @@ public class TestCaseGeneratorService {
                 log.info("AI service returned {} test cases", testCases != null ? testCases.size() : 0);
             } catch (Exception e) {
                 log.warn("AI service failed, falling back to template-based generation: {}", e.getMessage());
-                testCases = generateFallbackTestCases(request);
+                testCases = generateFallbackTestCases(request, workflowType);
                 log.info("Fallback generation returned {} test cases", testCases.size());
             }
             
             // Ensure we have at least some test cases
             if (testCases == null || testCases.isEmpty()) {
                 log.warn("No test cases generated, creating default test cases");
-                testCases = generateDefaultTestCases(request);
+                testCases = generateDefaultTestCases(request, workflowType);
             }
 
             // Step 3: Remove duplicates
@@ -306,6 +306,34 @@ public class TestCaseGeneratorService {
             systemMessage.append(String.format("**APPLICATION WORKFLOW (%s):**\n", effectiveWorkflowType));
             systemMessage.append(workflowService.getWorkflowContent(effectiveWorkflowType));
             systemMessage.append("\n\n");
+            
+            // Add workflow-specific instructions
+            if ("VS2".equals(effectiveWorkflowType) || "VS4".equals(effectiveWorkflowType)) {
+                systemMessage.append(String.format("""
+                🚨 CRITICAL %s WORKFLOW REQUIREMENT:
+                ═══════════════════════════════════════════════════════════════════════════════
+                For %s workflow test cases, you MUST specify SSC (Self Service Channel) application in EVERY test case's preconditions and test steps.
+                
+                MANDATORY Login Step Format for ALL test cases:
+                - Preconditions MUST include: "User has access to SSC (Self Service Channel) application"
+                - First test step MUST be: "Login to SSC (Self Service Channel) application with valid credentials"
+                - Never use generic "Login to application" - ALWAYS specify "SSC (Self Service Channel) application"
+                
+                Example Preconditions:
+                ✅ CORRECT: "User has access to SSC (Self Service Channel) application and has necessary permissions"
+                ❌ WRONG: "User has access to the application"
+                
+                Example First Step:
+                ✅ CORRECT: "1. Login to SSC (Self Service Channel) application with valid credentials"
+                ❌ WRONG: "1. Login to the application"
+                ❌ WRONG: "1. Access the system"
+                
+                This is NON-NEGOTIABLE for %s workflow - every single test case must explicitly mention SSC (Self Service Channel) application.
+                ═══════════════════════════════════════════════════════════════════════════════
+                
+                """, effectiveWorkflowType, effectiveWorkflowType, effectiveWorkflowType));
+            }
+            
             systemMessage.append("""
             When generating test steps:
             - CRITICAL: Extract specific entities from the user story (report names, screen names, field names, etc.) and use them in test steps
@@ -587,8 +615,8 @@ public class TestCaseGeneratorService {
      * Generate fallback test cases when AI service fails - intelligent content-based generation
      * Priority: ALL Business Rules must be covered first, then Acceptance Criteria, max 8 TC total
      */
-    private List<TestCase> generateFallbackTestCases(JiraStoryRequest request) {
-        log.info("Generating fallback test cases - Priority: ALL Business Rules + Acceptance Criteria (max 8 TC)");
+    private List<TestCase> generateFallbackTestCases(JiraStoryRequest request, String workflowType) {
+        log.info("Generating fallback test cases - Priority: ALL Business Rules + Acceptance Criteria (max 8 TC) for workflow: {}", workflowType);
         List<TestCase> testCases = new ArrayList<>();
         
         String userStory = request.getUserStory() != null ? request.getUserStory() : "";
@@ -597,8 +625,19 @@ public class TestCaseGeneratorService {
         
         int testCaseCounter = 1;
         
+        // Determine preconditions based on workflow type
+        String basePreconditions;
+        if ("VS2".equals(workflowType) || "VS4".equals(workflowType)) {
+            basePreconditions = "User has access to SSC (Self Service Channel) application and has necessary permissions to perform the required operations";
+        } else {
+            basePreconditions = "User has logged into the application and has necessary permissions to perform the required operations";
+        }
+        
         // Analyze the full content to understand the functionality
         ContentAnalysis analysis = analyzeContent(userStory, acceptanceCriteria, businessRules);
+        
+        // Override preconditions with workflow-specific ones
+        analysis.preconditions = basePreconditions;
         
         // PRIORITY 1: Generate test cases for ALL business rules (must be covered completely)
         if (!analysis.parsedBusinessRules.isEmpty()) {
@@ -614,7 +653,7 @@ public class TestCaseGeneratorService {
                         .testCaseId(String.format("TC-%03d", testCaseCounter++))
                         .testScenario(rule.testScenario)
                         .preconditions(analysis.preconditions)
-                        .testSteps(rule.testSteps)
+                        .testSteps(prependLoginStep(rule.testSteps, workflowType))
                         .expectedResult(rule.expectedResult)
                         .priority("High")
                         .testType(rule.isValidationRule ? "Negative" : "Positive")
@@ -632,7 +671,7 @@ public class TestCaseGeneratorService {
                         .testCaseId(String.format("TC-%03d", testCaseCounter++))
                         .testScenario(criterion.testScenario)
                         .preconditions(analysis.preconditions)
-                        .testSteps(criterion.testSteps)
+                        .testSteps(prependLoginStep(criterion.testSteps, workflowType))
                         .expectedResult(criterion.expectedResult)
                         .priority("High")
                         .testType("Positive")
@@ -646,7 +685,7 @@ public class TestCaseGeneratorService {
                     .testCaseId(String.format("TC-%03d", testCaseCounter++))
                     .testScenario(analysis.mainFunctionalityScenario)
                     .preconditions(analysis.preconditions)
-                    .testSteps(analysis.mainPositiveSteps)
+                    .testSteps(prependLoginStep(analysis.mainPositiveSteps, workflowType))
                     .expectedResult(analysis.mainPositiveExpectedResult)
                     .priority("High")
                     .testType("Positive")
@@ -659,7 +698,7 @@ public class TestCaseGeneratorService {
                     .testCaseId(String.format("TC-%03d", testCaseCounter++))
                     .testScenario(analysis.mandatoryFieldsScenario)
                     .preconditions(analysis.preconditions)
-                    .testSteps(analysis.mandatoryFieldsSteps)
+                    .testSteps(prependLoginStep(analysis.mandatoryFieldsSteps, workflowType))
                     .expectedResult("System prevents submission and displays appropriate validation error messages for each missing mandatory field")
                     .priority("High")
                     .testType("Negative")
@@ -671,7 +710,7 @@ public class TestCaseGeneratorService {
                     .testCaseId(String.format("TC-%03d", testCaseCounter++))
                     .testScenario(analysis.invalidDataScenario)
                     .preconditions(analysis.preconditions)
-                    .testSteps(analysis.invalidDataSteps)
+                    .testSteps(prependLoginStep(analysis.invalidDataSteps, workflowType))
                     .expectedResult("System validates input and displays appropriate error messages for invalid data")
                     .priority("High")
                     .testType("Negative")
@@ -684,7 +723,7 @@ public class TestCaseGeneratorService {
                     .testCaseId(String.format("TC-%03d", testCaseCounter++))
                     .testScenario(analysis.viewScenario)
                     .preconditions(analysis.viewPreconditions)
-                    .testSteps(analysis.viewSteps)
+                    .testSteps(prependLoginStep(analysis.viewSteps, workflowType))
                     .expectedResult(analysis.viewExpectedResult)
                     .priority("Medium")
                     .testType("Positive")
@@ -699,7 +738,7 @@ public class TestCaseGeneratorService {
                         .testCaseId(String.format("TC-%03d", testCaseCounter++))
                         .testScenario("Verify that " + exclusion + " is properly excluded/restricted")
                         .preconditions(analysis.preconditions)
-                        .testSteps("1. Attempt to proceed with " + exclusion + "\n2. Verify system prevents the action\n3. Check appropriate error/warning message is displayed")
+                        .testSteps(prependLoginStep("1. Attempt to proceed with " + exclusion + "\n2. Verify system prevents the action\n3. Check appropriate error/warning message is displayed", workflowType))
                         .expectedResult("System blocks the operation and displays message indicating " + exclusion + " is not allowed")
                         .priority("High")
                         .testType("Negative")
@@ -716,7 +755,7 @@ public class TestCaseGeneratorService {
                         .testCaseId(String.format("TC-%03d", testCaseCounter++))
                         .testScenario("Verify " + edgeCase)
                         .preconditions(analysis.preconditions)
-                        .testSteps("1. Set up " + edgeCase + " scenario\n2. Execute the operation\n3. Verify system handles it correctly")
+                        .testSteps(prependLoginStep("1. Set up " + edgeCase + " scenario\n2. Execute the operation\n3. Verify system handles it correctly", workflowType))
                         .expectedResult("System processes " + edgeCase + " appropriately without errors")
                         .priority("Medium")
                         .testType("Functional")
@@ -732,6 +771,62 @@ public class TestCaseGeneratorService {
                 Math.min(analysis.parsedAcceptanceCriteria.size(), 8 - analysis.parsedBusinessRules.size()),
                 testCases.size() - analysis.parsedBusinessRules.size() - Math.min(analysis.parsedAcceptanceCriteria.size(), 8 - analysis.parsedBusinessRules.size()));
         return testCases;
+    }
+    
+    /**
+     * Prepend workflow-specific login step to test steps
+     */
+    private String prependLoginStep(String testSteps, String workflowType) {
+        if (testSteps == null || testSteps.isEmpty()) {
+            testSteps = "";
+        }
+        
+        String loginPrefix;
+        if ("VS2".equals(workflowType) || "VS4".equals(workflowType)) {
+            loginPrefix = "1. Login to SSC (Self Service Channel) application with valid credentials\n";
+        } else {
+            loginPrefix = "1. Login to the application with valid credentials\n";
+        }
+        
+        // Check if test steps already start with login
+        String lowerSteps = testSteps.toLowerCase();
+        if (lowerSteps.startsWith("1. login") || lowerSteps.contains("login to")) {
+            // Already has login, just update if needed for SSC
+            if (("VS2".equals(workflowType) || "VS4".equals(workflowType)) && !lowerSteps.contains("ssc")) {
+                // Replace generic login with SSC-specific login
+                testSteps = testSteps.replaceFirst("(?i)1\\.\\s*Login to (the )?application", 
+                    "1. Login to SSC (Self Service Channel) application");
+            }
+            return testSteps;
+        }
+        
+        // Renumber existing steps and prepend login
+        String[] lines = testSteps.split("\n");
+        StringBuilder result = new StringBuilder(loginPrefix);
+        
+        for (String line : lines) {
+            String trimmedLine = line.trim();
+            if (trimmedLine.isEmpty()) continue;
+            
+            // Check if line starts with a number
+            if (trimmedLine.matches("^\\d+\\..*")) {
+                // Extract the number and content
+                int dotIndex = trimmedLine.indexOf('.');
+                try {
+                    int stepNumber = Integer.parseInt(trimmedLine.substring(0, dotIndex).trim());
+                    String content = trimmedLine.substring(dotIndex + 1).trim();
+                    result.append(stepNumber + 1).append(". ").append(content).append("\n");
+                } catch (NumberFormatException e) {
+                    // If parsing fails, just append the line as is
+                    result.append(trimmedLine).append("\n");
+                }
+            } else {
+                // Not a numbered step, append as is
+                result.append(trimmedLine).append("\n");
+            }
+        }
+        
+        return result.toString().trim();
     }
     
     /**
@@ -1290,17 +1385,24 @@ public class TestCaseGeneratorService {
         }
     }
     
-    private List<TestCase> generateDefaultTestCases(JiraStoryRequest request) {
+    private List<TestCase> generateDefaultTestCases(JiraStoryRequest request, String workflowType) {
         List<TestCase> defaultCases = new ArrayList<>();
         String storyTitle = request.getUserStory() != null ? request.getUserStory() : "JIRA Story";
+        
+        String preconditions;
+        if ("VS2".equals(workflowType) || "VS4".equals(workflowType)) {
+            preconditions = "User has access to SSC (Self Service Channel) application and has necessary permissions";
+        } else {
+            preconditions = "User is logged in and has necessary permissions";
+        }
         
         // Generate basic positive test case
         defaultCases.add(TestCase.builder()
                 .testCaseId("TC001")
                 .testScenario("Verify " + extractMainAction(storyTitle) + " with valid data")
                 .toValidate("To validate that " + extractMainAction(storyTitle) + " works correctly with valid inputs")
-                .preconditions("User is logged in and has necessary permissions")
-                .testSteps("1. Navigate to the form/page\n2. Enter valid data in all required fields\n3. Submit the form")
+                .preconditions(preconditions)
+                .testSteps(prependLoginStep("1. Navigate to the form/page\n2. Enter valid data in all required fields\n3. Submit the form", workflowType))
                 .expectedResult("Operation completes successfully with confirmation message")
                 .priority("High")
                 .testType("Positive")
@@ -1311,8 +1413,8 @@ public class TestCaseGeneratorService {
                 .testCaseId("TC002")
                 .testScenario("Verify " + extractMainAction(storyTitle) + " with invalid/empty data")
                 .toValidate("To validate that the system properly handles invalid or missing input data")
-                .preconditions("User is logged in and has necessary permissions")
-                .testSteps("1. Navigate to the form/page\n2. Leave required fields empty or enter invalid data\n3. Attempt to submit")
+                .preconditions(preconditions)
+                .testSteps(prependLoginStep("1. Navigate to the form/page\n2. Leave required fields empty or enter invalid data\n3. Attempt to submit", workflowType))
                 .expectedResult("Appropriate error messages are displayed and submission is prevented")
                 .priority("High")
                 .testType("Negative")
