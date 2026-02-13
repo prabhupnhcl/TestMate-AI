@@ -17,7 +17,7 @@ import jakarta.annotation.PostConstruct;
 
 /**
  * Service for loading and managing application workflow documentation
- * Supports multiple workflows (VS2, VS4, etc.)
+ * Supports multiple workflows (VS2, VS4, VS6, etc.)
  */
 @Service
 public class WorkflowService {
@@ -29,6 +29,9 @@ public class WorkflowService {
     
     @Value("${workflow.vs2.document.path:VS2 Flow.docx}")
     private String vs2WorkflowDocumentPath;
+    
+    @Value("${workflow.vs6.document.path:VS6 Flow.docx}")
+    private String vs6WorkflowDocumentPath;
     
     // Map to store workflow content by workflow type
     private Map<String, String> workflowContents = new HashMap<>();
@@ -51,6 +54,9 @@ public class WorkflowService {
         // Load VS2 workflow
         loadWorkflowByType("VS2", vs2WorkflowDocumentPath);
         
+        // Load VS6 workflow
+        loadWorkflowByType("VS6", vs6WorkflowDocumentPath);
+        
         // Set default workflow to VS4 for backward compatibility
         if (workflowLoadedStatus.getOrDefault("VS4", false)) {
             workflowContent = workflowContents.get("VS4");
@@ -60,6 +66,10 @@ public class WorkflowService {
             workflowContent = workflowContents.get("VS2");
             workflowLoaded = true;
             log.info("Default workflow set to VS2");
+        } else if (workflowLoadedStatus.getOrDefault("VS6", false)) {
+            workflowContent = workflowContents.get("VS6");
+            workflowLoaded = true;
+            log.info("Default workflow set to VS6");
         } else {
             workflowLoaded = false;
             log.warn("No workflow documents loaded. Test case generation will proceed without workflow context");
@@ -147,7 +157,7 @@ public class WorkflowService {
     /**
      * Determine workflow type from JIRA key
      * @param jiraKey - JIRA story key (e.g., R2CX-7237)
-     * @return workflow type (VS2, VS4, or null if cannot be determined)
+     * @return workflow type (VS2, VS4, VS6, or null if cannot be determined)
      */
     public String determineWorkflowType(String jiraKey) {
         if (jiraKey == null || jiraKey.isEmpty()) {
@@ -155,8 +165,7 @@ public class WorkflowService {
             return null;
         }
         
-        // VS2 stories are typically identified by VS2 in the story summary or key
-        // VS4 stories are typically identified by VS4 in the story summary or key
+        // VS2, VS4, and VS6 stories are typically identified by their workflow type in the story summary or key
         String upperKey = jiraKey.toUpperCase();
         
         if (upperKey.contains("VS2") || upperKey.contains("VS-2")) {
@@ -165,6 +174,9 @@ public class WorkflowService {
         } else if (upperKey.contains("VS4") || upperKey.contains("VS-4")) {
             log.info("Detected VS4 workflow from JIRA key: {}", jiraKey);
             return "VS4";
+        } else if (upperKey.contains("VS6") || upperKey.contains("VS-6")) {
+            log.info("Detected VS6 workflow from JIRA key: {}", jiraKey);
+            return "VS6";
         }
         
         log.debug("Could not determine workflow type from JIRA key: {}", jiraKey);
@@ -174,7 +186,7 @@ public class WorkflowService {
     /**
      * Determine workflow type from user story content (including JIRA description/summary)
      * @param userStory - user story text (may include JIRA key, summary, and description)
-     * @return workflow type (VS2, VS4, or null)
+     * @return workflow type (VS2, VS4, VS6, or null)
      */
     public String determineWorkflowTypeFromStory(String userStory) {
         if (userStory == null || userStory.isEmpty()) {
@@ -199,7 +211,15 @@ public class WorkflowService {
             return "VS4";
         }
         
-        log.debug("No VS2 or VS4 mention found in user story content (length: {})", userStory.length());
+        // Check for VS6 mentions in the entire story content
+        if (upperStory.contains("VS6") || upperStory.contains("VS-6") || 
+            upperStory.contains("VALUE STREAM 6") || upperStory.contains("VALUESTREAM6")) {
+            log.info("Detected VS6 workflow from user story content: {}", 
+                userStory.length() > 100 ? userStory.substring(0, 100) + "..." : userStory);
+            return "VS6";
+        }
+        
+        log.debug("No VS2, VS4, or VS6 mention found in user story content (length: {})", userStory.length());
         return null;
     }
 

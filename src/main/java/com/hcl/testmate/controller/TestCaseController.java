@@ -131,8 +131,8 @@ public class TestCaseController {
                             .additionalNotes("")
                             .build();
                     
-                    // Generate test cases for this document
-                    TestCaseResponse response = testCaseGeneratorService.generateTestCases(request);
+                    // Generate test cases for this document - bypass cache to ensure fresh generation
+                    TestCaseResponse response = testCaseGeneratorService.generateTestCases(request, true);
                     
                     // Add extracted sections to response
                     if (response.isSuccess()) {

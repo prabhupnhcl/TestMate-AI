@@ -46,8 +46,18 @@ public class TestCaseGeneratorService {
     }
 
     public TestCaseResponse generateTestCases(JiraStoryRequest request) {
+        return generateTestCases(request, false);
+    }
+    
+    /**
+     * Generate test cases with option to bypass cache
+     * @param request The JIRA story request
+     * @param bypassCache If true, ignores cached results and generates fresh test cases
+     * @return TestCaseResponse with generated test cases
+     */
+    public TestCaseResponse generateTestCases(JiraStoryRequest request, boolean bypassCache) {
         try {
-            log.info("Starting test case generation process");
+            log.info("Starting test case generation process (bypass cache: {})", bypassCache);
             log.debug("Input data - User Story: {}, AC: {}, BR: {}", 
                 request.getUserStory() != null ? "Present (" + request.getUserStory().length() + " chars)" : "Not provided",
                 request.getAcceptanceCriteria() != null ? "Present (" + request.getAcceptanceCriteria().length() + " chars)" : "Not provided",
@@ -65,8 +75,8 @@ public class TestCaseGeneratorService {
                     ? request.getUserStory().substring(0, 50) + "..." 
                     : request.getUserStory());
             
-            // Check cache if JIRA key is found
-            if (jiraKey != null && testCaseCache.containsKey(jiraKey)) {
+            // Check cache if JIRA key is found and cache is not bypassed
+            if (!bypassCache && jiraKey != null && testCaseCache.containsKey(jiraKey)) {
                 log.info("Found cached test cases for JIRA story: {}", jiraKey);
                 TestCaseResponse cachedResponse = testCaseCache.get(jiraKey);
                 // Return a copy to prevent modification of cached data
@@ -82,6 +92,12 @@ public class TestCaseGeneratorService {
                     .extractedContent(cachedResponse.getExtractedContent())
                     .build();
                 return response;
+            }
+            
+            // If bypassing cache, clear it for this JIRA key
+            if (bypassCache && jiraKey != null && testCaseCache.containsKey(jiraKey)) {
+                log.info("Bypassing cache - clearing cached test cases for JIRA story: {}", jiraKey);
+                testCaseCache.remove(jiraKey);
             }
 
             // Step 1: Validate the story (relaxed: log warning but do not block)
@@ -144,10 +160,12 @@ public class TestCaseGeneratorService {
                     .message("Successfully generated " + testCases.size() + " test cases")
                     .build();
             
-            // Cache the response if JIRA key is present
-            if (jiraKey != null) {
+            // Cache the response if JIRA key is present and not bypassing cache
+            if (!bypassCache && jiraKey != null) {
                 log.info("Caching test cases for JIRA story: {}", jiraKey);
                 testCaseCache.put(jiraKey, response);
+            } else if (bypassCache && jiraKey != null) {
+                log.debug("Not caching test cases for JIRA story {} (cache bypassed)", jiraKey);
             }
                     
             return response;
@@ -339,6 +357,28 @@ public class TestCaseGeneratorService {
             9. Avoid redundant or trivial test cases
             10. If application workflow is provided, use it as a TEMPLATE but replace generic examples with specific details from the user story
             
+            🚨 CRITICAL REQUIREMENT - DETAILED TEST STEPS FOR ALL TEST CASES:
+            ═══════════════════════════════════════════════════════════════════════════════
+            EVERY SINGLE TEST CASE must have detailed, specific, step-by-step instructions.
+            
+            ❌ FORBIDDEN - Generic/lazy test steps like:
+            "Follow the steps mentioned in the first test case"
+            "Same steps as TC-001"
+            "Standard validation steps"
+            "Navigate and verify"
+            
+            ✅ REQUIRED - Each test case MUST have complete, detailed steps like:
+            "1. Login to the application
+            2. Navigate to Reports > Credit Risk
+            3. Select 'Generate Monthly Report' option
+            4. Enter the reporting period (start date and end date)
+            5. Click 'Generate' button
+            6. Verify the report is generated successfully"
+            
+            EVERY test case must be fully detailed and independent. DO NOT reference other test cases.
+            Each testSteps field must contain 5-10 specific numbered steps minimum.
+            ═══════════════════════════════════════════════════════════════════════════════
+            
             RESPONSE FORMAT - Return ONLY a valid JSON array:
             [
               {
@@ -346,7 +386,7 @@ public class TestCaseGeneratorService {
                 "testScenario": "Clear business scenario - NEVER include URLs or file paths",
                 "toValidate": "To validate [functionality] - NO URLs",
                 "preconditions": "Setup conditions - NO URLs",
-                "testSteps": "1. Action step\n2. Next step\n3. Verify - NO URLs in steps",
+                "testSteps": "1. Detailed action step\n2. Next specific step\n3. Another clear step\n4. Continue with details\n5. Verify expected behavior - NO URLs in steps (minimum 5-10 steps)",
                 "expectedResult": "Expected outcome - NO URLs",
                 "priority": "High",
                 "testType": "Positive"
@@ -375,6 +415,9 @@ public class TestCaseGeneratorService {
             - Maximum 8 test cases - prioritize the most important scenarios
             - When workflow documentation is available, use it as a pattern/template but ALWAYS use the specific entities mentioned in the user story
             - NEVER use generic examples from workflow if the user story provides specific details (e.g., if story mentions "Monthly Sales Report", use that, not "Fit and Proper Report")
+            - 🚨 CRITICAL: Write complete, detailed test steps (5-10 steps) for EVERY SINGLE test case - TC-001, TC-002, TC-003, ALL of them
+            - 🚨 NEVER write generic steps or reference other test cases - each test case must stand alone with full details
+            - Each testSteps field should read like a complete instruction manual that anyone can follow without any additional context
             """);
             
         return systemMessage.toString();
@@ -1553,6 +1596,36 @@ public class TestCaseGeneratorService {
             suggestions, 
             "Always prefer ID when available (Score: 9-10). Use CSS selectors for flexibility (Score: 6-8). Avoid XPath unless necessary (Score: 1-5). Choose locators with reliability scores of 7 or higher for production tests."
         );
+    }
+    
+    /**
+     * Clear cache for a specific JIRA story key
+     * @param jiraKey The JIRA story key to clear from cache
+     */
+    public void clearCache(String jiraKey) {
+        if (jiraKey != null && testCaseCache.containsKey(jiraKey)) {
+            log.info("Clearing cache for JIRA story: {}", jiraKey);
+            testCaseCache.remove(jiraKey);
+        }
+    }
+    
+    /**
+     * Clear all cached test cases
+     */
+    public void clearAllCache() {
+        log.info("Clearing all cached test cases ({} items)", testCaseCache.size());
+        testCaseCache.clear();
+    }
+    
+    /**
+     * Get cache statistics
+     * @return Map with cache statistics
+     */
+    public Map<String, Object> getCacheStatistics() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("cachedStories", testCaseCache.size());
+        stats.put("cachedKeys", new ArrayList<>(testCaseCache.keySet()));
+        return stats;
     }
 }
 // Removed duplicate method and extraneous code after class

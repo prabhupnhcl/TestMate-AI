@@ -578,15 +578,13 @@ function displayJiraResults(testCaseResponse, jiraKey) {
     displayTestCases(testCaseResponse.testCases);
     
     // Store original request data for coverage validation
-    if (window.originalRequestData !== undefined) {
-        window.originalRequestData = {
-            userStory: testCaseResponse.extractedContent?.userStory || testCaseResponse.jiraSummary || 'N/A',
-            acceptanceCriteria: testCaseResponse.extractedContent?.acceptanceCriteria || 'N/A',
-            businessRules: testCaseResponse.extractedContent?.businessRules || 'N/A',
-            isJiraIntegration: true,
-            jiraKey: jiraKey
-        };
-    }
+    window.originalRequestData = {
+        userStory: testCaseResponse.extractedContent?.userStory || testCaseResponse.jiraSummary || 'N/A',
+        acceptanceCriteria: testCaseResponse.extractedContent?.acceptanceCriteria || 'N/A',
+        businessRules: testCaseResponse.extractedContent?.businessRules || 'N/A',
+        isJiraIntegration: true,
+        jiraKey: jiraKey
+    };
     
     // Store for CSV download
     window.currentTestCases = testCaseResponse.testCases;
@@ -706,7 +704,7 @@ function displayBatchJiraResults(batchResponse) {
     
     // Store original request data for coverage validation (first successful story)
     const firstSuccess = batchResponse.results.find(r => r.success);
-    if (firstSuccess && firstSuccess.response && window.originalRequestData !== undefined) {
+    if (firstSuccess && firstSuccess.response) {
         const response = firstSuccess.response;
         window.originalRequestData = {
             userStory: response.extractedContent?.userStory || response.jiraSummary || 'N/A',
